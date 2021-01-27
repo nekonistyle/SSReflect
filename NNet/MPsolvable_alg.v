@@ -63,7 +63,7 @@ Section zmod3NNet_lemma.
     apply : MPsolvable_constant => y /=. by rewrite unfold_in =>/eqP ->.
   Qed.
 
-  Let MPsolvable Idim l Odim s := @MPsolvable S Idim l Odim (pred_of_eq_seq s).
+  Let MPsolvable Idim l Odim s := @MPsolvable S Idim l Odim (pred_of_seq s).
 
   Lemma MPsolvable_nil Idim l Odim (f:I ^ Idim -> O ^ Odim):
     MPsolvable l ([::] : seq (I ^Idim)) f.
@@ -174,6 +174,7 @@ Section zmod3NNet_lemma.
     case : ifP =>[/eqP|_]/ffunP Heq.
     - move : (Heq (Ordinal HIdim)). by rewrite !ffunE =>->.
     - move : (Heq (Ordinal HOdim)). by rewrite !ffunE =>->.
+      
   Qed.
 
   Lemma maximum_expressive_number_ex Idim l Odim n:
