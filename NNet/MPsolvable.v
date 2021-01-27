@@ -212,7 +212,7 @@ Section idCNNet_lemma.
   Lemma MPsolvable_Idim0 l Odim P (f:I ^ 0 -> O ^ Odim): MPsolvable l P f.
   Proof.
     apply : MPsolvable_eqr (MPsolvable_bias _ _ _) => input.
-    by rewrite eq_empty_index.
+      by rewrite eq_empty_index.
   Qed.
 
   Lemma MPsolvable_I1 (i0:I) :
