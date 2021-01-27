@@ -42,13 +42,34 @@ MPfunction Idim l Odim (p:MPparameter Idim l Odim) : I ^ Idim -> O ^ Odim.
 `neuron1Type`/`NNetType` with identity element `id` in `O`.
 
 ### comoneuron1Type/comoNNetType
-operation `op` in `mononeuron1Type`/`monoNNetType` is commutative
+operation `op` in `mononeuron1Type`/`monoNNetType` is commutative.
 
 ### idCneuron1Type/idCNNetType
 `mononeuron1Type`/`monoNNetType` with zero element `idC` in `C` such that `forall x:I, action idC x = id`.
 
 ### comidCneuron1Type/comidCNNetType
-satisfy `como` and `idC`
+satisfy both of `como` and `idC`.
+
+### zmodneuron1Type/zmodNNetType
+`O` is zmodType.
+
+### zmodCNNetType
+`O` and `C` are zmodType satisfying `forall a b x, action (a + b) x = action a x + action b x`.
+
+### zmodINNetType
+`O` and `I` are zmodType satisfying `forall a x y, action a (x + y) = action a x + action a y`.
+
+### zmod3NNetType
+satisfy both of `zmodC` and `zmodI`.
+
+### lmodNNetType
+`C:ringType`, `O:lmodType C` and `I := O`.
+
+### lalgNNetType
+`lalgType` version of `lmodType`.
+
+### algNNetType
+`algType` version of `lmodType`.
 
 
 ## Notice
