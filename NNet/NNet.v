@@ -60,9 +60,9 @@ Section neuron1_lemma.
     fun input => \big[op/b]_(i < Idim) action (coeff i) (input i).
 
   Definition MP1parameter Idim Odim : Type :=
-    (C ^ Idim) ^ Odim * O ^ Odim.
+    ((C ^ Idim) ^ Odim : Type) * O ^ Odim.
 
-  Definition coeff_zero c0 Idim Odim : (C ^ Idim) ^ Odim :=
+  Definition coeff_zero c0 Idim Odim : (C ^ Idim) ^ Odim : Type :=
     [ffun => [ffun => c0]].
 
   Definition bias_zero o0 Odim : O ^ Odim := [ffun => o0].
@@ -88,7 +88,7 @@ Section neuron1_lemma.
     neuron1 coeff (op b b') input = op (neuron1 coeff b input) b'.
   Proof. by rewrite /neuron1 big_idx_assoc; last exact NNopA. Qed.
 
-  Lemma MP1_op_bias Idim Odim (coeff:(C ^ Idim) ^ Odim)
+  Lemma MP1_op_bias Idim Odim (coeff:(C ^ Idim) ^ Odim: Type)
         (bias bias':O ^ Odim) input:
     MP1 (coeff,[ffun j => op (bias j) (bias' j)]) input
     = [ffun j => op (MP1 (coeff,bias) input j) (bias' j)].
@@ -115,7 +115,7 @@ Section neuron1_lemma.
   Proof. apply /ffunP => j. rewrite !ffunE. exact : neuron1_appI. Qed.
 
   Lemma MP1_sumO Idim Odim Odim'
-        (coeff:(C ^ Idim) ^ Odim) (coeff':(C ^ Idim) ^ Odim') bias bias' input:
+        (coeff:(C ^ Idim) ^ Odim: Type) (coeff':(C ^ Idim) ^ Odim' : Type) bias bias' input:
     MP1 ((index_app coeff coeff'),(index_app bias bias')) input =
     index_app (MP1 (coeff,bias) input) (MP1 (coeff',bias') input).
   Proof.
@@ -266,7 +266,7 @@ Section mononeuron1_lemma.
     neuron1 coeff b input = op (neuron1 coeff id input) b.
   Proof. by rewrite /op -neuron1_op_bias -/op NNop0o. Qed.
 
-  Lemma MP1_bias Idim Odim (coeff:(C ^ Idim) ^ Odim) bias input:
+  Lemma MP1_bias Idim Odim (coeff:(C ^ Idim) ^ Odim: Type) bias input:
     MP1 (coeff,bias) input =
     [ffun j => op (MP1 (coeff,bias0 _) input j) (bias j)].
   Proof. apply /ffunP => j. by rewrite !ffunE -/neuron1 neuron1_bias. Qed.
@@ -347,7 +347,8 @@ Section idCneuron1_lemma.
   Proof. by apply /ffunP => j; rewrite !ffunE neuron1_idC. Qed.
 
   Definition coeff_app Idim Odim Idim' Odim'
-             (coeff:(C ^ Idim) ^ Odim) (coeff':(C ^ Idim') ^ Odim') :=
+             (coeff:(C ^ Idim) ^ Odim: Type) (coeff':(C ^ Idim') ^ Odim': Type)
+    :=
     index_app
       [ffun j:'I_Odim => (index_app (coeff j) [ffun _ :'I_Idim' => idC])]
       [ffun j:'I_Odim' => (index_app [ffun _ :'I_Idim => idC] (coeff' j))].
@@ -461,7 +462,7 @@ Section comoneuron1_lemma.
   Qed.
 
   Lemma MP1_sumI Idim Idim' Odim
-      (coeff:(C ^ Idim) ^ Odim) (coeff':(C ^ Idim') ^ Odim)
+      (coeff:(C ^ Idim) ^ Odim: Type) (coeff':(C ^ Idim') ^ Odim: Type)
       (bias bias':O ^ Odim) input:
     MP1 ([ffun j => index_app (coeff j) (coeff' j)],
          [ffun j => op (bias j) (bias' j)]) input
@@ -484,7 +485,7 @@ Section comoneuron1_lemma.
   Proof. by rewrite -neuron1_sumI /id /op NNop0o. Qed.
 
   Lemma MP1_appl Idim Idim' Odim
-      (coeff:(C ^ Idim) ^ Odim) (coeff':(C ^ Idim') ^ Odim)
+      (coeff:(C ^ Idim) ^ Odim: Type) (coeff':(C ^ Idim') ^ Odim: Type)
       (bias :O ^ Odim) input:
     MP1 ([ffun j => index_app (coeff j) (coeff' j)],bias) input
     = [ffun j => op (MP1 (coeff,bias) (index_projl input) j)
@@ -492,7 +493,7 @@ Section comoneuron1_lemma.
   Proof. apply /ffunP => j. by rewrite !ffunE neuron1_appl. Qed.
 
   Lemma MP1_appr Idim Idim' Odim
-      (coeff:(C ^ Idim) ^ Odim) (coeff':(C ^ Idim') ^ Odim)
+      (coeff:(C ^ Idim) ^ Odim: Type) (coeff':(C ^ Idim') ^ Odim: Type)
       (bias :O ^ Odim) input:
     MP1 ([ffun j => index_app (coeff j) (coeff' j)],bias) input
     = [ffun j => op (MP1 (coeff,bias0 _ _) (index_projl input) j)
