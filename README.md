@@ -14,8 +14,9 @@ Perceptron is defined on `neuron1Type`
 ```Coq
 (* parameters of perceptron *)
 MP1parameter Idim Odim : Type.
-  (* Idim : nat : number of input neurons *)
-  (* Odim : nat : number of output neurons *)
+      (* Idim : nat : number of input neurons *)
+      (* Odim : nat : number of output neurons *)
+
 
 (* perceptron as a function *)
 MP1 Idim Odim (p:MP1parameter Idim Odim) : I ^ Idim -> O ^ Odim.
@@ -28,15 +29,20 @@ Multilayer Perceptron is defined on `NNetType`.
 ```Coq
 (* parameters of multilayer perceptron *)
 MPparameter Idim l Odim : Type.
-  (* Idim : nat : number of input neurons *)
-  (* Odim : nat : number of output neurons *)
-  (* l : seq nat : sequence of the numbers of each hidden neurons *)
+      (* Idim : nat : number of input neurons *)
+      (* Odim : nat : number of output neurons *)
+      (* l : seq nat : sequence of the numbers of each hidden neurons *)
+
 
 (* multilayer perceptron as a function *)
 MPfunction Idim l Odim (p:MPparameter Idim l Odim) : I ^ Idim -> O ^ Odim. 
 ```
 
-###
+### mononeuron1Type/monoNNetType
+`neuron1Type`/`NNetType` with identity element `id` in `O`
+
+### comoneuron1Type/comoNNetType
+`mononeuron1Type`/`monoNNetType` with zero element `idC` in `C` such that `forall x:I, action idC x = id`
 
 
 ## Notice
