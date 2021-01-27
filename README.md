@@ -39,10 +39,10 @@ MPfunction Idim l Odim (p:MPparameter Idim l Odim) : I ^ Idim -> O ^ Odim.
 ```
 
 ### mononeuron1Type/monoNNetType
-`neuron1Type`/`NNetType` with identity element `id` in `O`
+`neuron1Type`/`NNetType` with identity element `id` in `O`.
 
 ### comoneuron1Type/comoNNetType
-`mononeuron1Type`/`monoNNetType` with zero element `idC` in `C` such that `forall x:I, action idC x = id`
+`mononeuron1Type`/`monoNNetType` with zero element `idC` in `C` such that `forall x:I, action idC x = id`.
 
 
 ## Notice
