@@ -109,7 +109,7 @@ Section ssrbool.
 
     Lemma comparable_incomp x y : comparable x y = ~~ incomp x y.
     Proof. by rewrite /incomp -negb_or negbK. Qed.
-                                                       
+
     Lemma rel_strict_trans :
       transitive R -> forall y x z, R x y -> strict y z -> strict x z.
     Proof.
@@ -172,14 +172,20 @@ Section ssrbool.
     Lemma equivNstrict x y : equiv x y -> ~~ strict x y.
     Proof. case /andP => HRxy HRyx. by rewrite /strict negb_and HRyx orbT. Qed.
 
-    CoInductive compare_rel x y : bool -> bool -> bool -> bool -> Set :=
-    | CompareRelLt of strict x y : compare_rel x y true false false false
-    | CompareRelGt of strict y x : compare_rel x y false true false false
-    | CompareRelEq of equiv x y : compare_rel x y false false true false
-    | CompareRelIC of incomp x y : compare_rel x y false false false true.
+    CoInductive compare_rel x y :
+      bool -> bool -> bool -> bool -> bool -> bool -> bool -> bool -> Set :=
+    | CompareRelLt of strict x y :
+        compare_rel x y true false true false false false false false
+    | CompareRelGt of strict y x :
+        compare_rel x y false true false true false false false false
+    | CompareRelEq of equiv x y :
+        compare_rel x y true true false false true true false false
+    | CompareRelIC of incomp x y :
+        compare_rel x y false false false false false false true true.
 
     Lemma relP x y :
-      compare_rel x y (strict x y) (strict y x) (equiv x y) (incomp x y).
+      compare_rel x y (R x y) (R y x) (strict x y) (strict y x)
+                  (equiv x y) (equiv y x) (incomp x y) (incomp y x).
     Proof.
       rewrite /strict /equiv /incomp.
       case Hxy : (R x y); case Hyx : (R y x) =>/=.
@@ -187,6 +193,13 @@ Section ssrbool.
       - constructor. by rewrite /strict Hxy Hyx.
       - constructor. by rewrite /strict Hxy Hyx.
       - constructor. by rewrite /incomp Hxy Hyx.
+    Qed.
+
+    Lemma antisymmP x y :
+      reflexive R -> antisymmetric R -> reflect (x = y) (equiv x y).
+    Proof.
+      move => Hrefl Hanti. apply /(iffP idP) =>[|->]; first exact : Hanti.
+      exact : equiv_refl.
     Qed.
 
     Hypothesis (Htotal : total R).
@@ -205,37 +218,159 @@ Section ssrbool.
     Lemma total_strict_equiv x y : [|| strict x y , equiv x y | strict y x].
     Proof. by rewrite orbA -rel_strict_equiv total_rel_strict. Qed.
 
-    CoInductive compare_total x y : bool -> bool -> bool -> Set :=
-    | CompareTotalLt of strict x y : compare_total x y true false false
-    | CompareTotalGt of strict y x : compare_total x y false true false
-    | CompareTotalEq of equiv x y : compare_total x y false false true.
+    CoInductive compare_total x y :
+      bool -> bool -> bool -> bool -> bool -> bool -> Set :=
+    | CompareTotalLt of strict x y :
+        compare_total x y true false true false false false
+    | CompareTotalGt of strict y x :
+        compare_total x y false true false true false false
+    | CompareTotalEq of equiv x y :
+        compare_total x y true true false false true true.
 
-    Lemma totalP x y : compare_total x y (strict x y) (strict y x) (equiv x y).
+    Lemma totalP x y :
+      compare_total x y (R x y) (R y x) (strict x y) (strict y x)
+                    (equiv x y) (equiv y x).
     Proof.
       case : relP; try constructor =>//.
-        by move /negbTE : (total_Nincomp x y) =>->.
+      - by rewrite equiv_symm.
+      - by move /negbTE : (total_Nincomp y x) =>->.
     Qed.
 
   End rel.
-  Section arg.
+  Section argrel.
     Variable (S T:Type).
+    Variable (f:S -> T).
     Variable (R:rel T).
 
-    Definition arg (f:S -> T) : rel S := fun x y => R (f x) (f y).
+    Definition argrel : rel S := fun x y => R (f x) (f y).
 
-    Lemma arg_refl f : reflexive R -> reflexive (arg f).
+    Lemma argrel_refl : reflexive R -> reflexive argrel.
     Proof. move => H x. exact : H. Qed.
 
-    Lemma arg_total f : total R -> total (arg f).
+    Lemma argrel_symm : symmetric R -> symmetric argrel.
     Proof. move => H x y. exact : H. Qed.
 
-    Lemma arg_symm f : symmetric R -> symmetric (arg f).
-    Proof. move => H x y. exact : H. Qed.
-
-    Lemma arg_trans f : transitive R -> transitive (arg f).
+    Lemma argrel_trans : transitive R -> transitive argrel.
     Proof. move => H y x z. exact : H. Qed.
 
-  End arg.
+    Lemma argrel_total : total R -> total argrel.
+    Proof. move => H x y. exact : H. Qed.
+
+    Lemma argrel_anti : injective f -> antisymmetric R -> antisymmetric argrel.
+    Proof. by move => Hf H x y /H /Hf. Qed.
+
+  End argrel.
+
+  Section argrel_lemma.
+    Variable (S T:Type).
+    Variable (f:S -> T).
+    Variable (R:rel T).
+
+    Lemma strict_argrel : strict (argrel f R) =2 argrel f (strict R).
+    Proof. done. Qed.
+
+    Lemma equiv_argrel : equiv (argrel f R) =2 argrel f (equiv R).
+    Proof. done. Qed.
+
+    Lemma comparable_argrel :
+      comparable (argrel f R) =2 argrel f (comparable R).
+    Proof. done. Qed.
+
+    Lemma incomp_argrel : incomp (argrel f R) =2 argrel f (incomp R).
+    Proof. done. Qed.
+
+  End argrel_lemma.
+  
+  Section lexicsum.
+    Variable (T S:Type).
+    Variable (R:rel T).
+    Variable (Q:rel S).
+
+    Definition lexicsum : rel (T + S) :=
+      fun x y => match x, y with
+                 | inl a, inl b => R a b
+                 | inl _, inr _ => true
+                 | inr _, inl _ => false
+                 | inr a, inr b => Q a b
+                 end.
+
+    Lemma lexicsum_refl : reflexive R -> reflexive Q -> reflexive lexicsum.
+    Proof. move => HR HQ [x|x]. exact : HR. exact : HQ. Qed.
+
+    Lemma lexicsum_trans : transitive R -> transitive Q -> transitive lexicsum.
+    Proof. move => HR HQ [y|y] [x|x] [z|z]//. exact : HR. exact : HQ. Qed.
+
+    Lemma lexicsum_total : total R -> total Q -> total lexicsum.
+    Proof. move => HR HQ [x|x] [y|y]//. exact : HR. exact : HQ. Qed.
+
+    Lemma lexicsum_anti :
+      antisymmetric R -> antisymmetric Q -> antisymmetric lexicsum.
+    Proof. move => HR HQ [x|x] [y|y]//. by move /HR ->. by move /HQ ->. Qed.
+
+  End lexicsum.
+
+  Section lexicsum_lemma.
+    Variable (T S:Type).
+    Variable (R:rel T).
+    Variable (Q:rel S).
+
+    Lemma strict_lexicsum :
+      strict (lexicsum R Q) =2 lexicsum (strict R) (strict Q).
+    Proof. by move => [x|x] [y|y]. Qed.
+
+  End lexicsum_lemma.
+
+  Section lexicographic.
+    Variable (T S:Type).
+    Variable (R:rel T).
+    Variable (Q:rel S).
+
+    Definition lexicographic : rel (T * S) :=
+      fun x y => strict R x.1 y.1 || equiv R x.1 y.1 && Q x.2 y.2.
+
+    Lemma lexicgraphic_refl :
+      reflexive R -> reflexive Q -> reflexive lexicographic.
+    Proof.
+      rewrite /lexicographic => /equiv_refl HR HQ x.
+        by rewrite HR HQ orbT.
+    Qed.
+
+    Lemma lexicographic_trans :
+      transitive R -> transitive Q -> transitive lexicographic.
+    Proof.
+      rewrite /lexicographic
+      => HR HQ y x z
+            /orP [HRxy|/andP[HRxy HQxy]] /orP [HRyz|/andP[HRyz HQyz]].
+      - by rewrite (strict_trans HR HRxy HRyz).
+      - by rewrite -(equiv_strictr HR _ HRyz) HRxy.
+      - by rewrite (equiv_strictl HR _ HRxy) HRyz.
+      - by rewrite (equiv_trans HR HRxy HRyz) (HQ _ _ _ HQxy HQyz) orbT.
+    Qed.
+
+    Lemma lexicoghraphic_total : total R -> total Q -> total lexicographic.
+    Proof.
+      rewrite /lexicographic => HR HQ x y. by case /totalP : HR =>//=. 
+    Qed.
+
+    Lemma lexicographic_anti :
+      antisymmetric R -> antisymmetric Q -> antisymmetric lexicographic.
+    Proof.
+      rewrite /lexicographic => HR HQ [x1 x2] [y1 y2].
+        by case : relP =>//= /HR -> /HQ ->.
+    Qed.
+
+  End lexicographic.
+
+  Section lexicographic_lemma.
+    Variable (T S:Type).
+    Variable (R:rel T).
+    Variable (Q:rel S).
+
+    Lemma strict_lexicographic :
+      strict (lexicographic R Q) =2 lexicographic R (strict Q).
+    Proof. rewrite /lexicographic /strict => x y. by case : relP. Qed.
+
+  End lexicographic_lemma.
 
   Lemma predTI T (A:pred T) : [predI predT & A] =1 A.
   Proof. move => x. exact : andTb. Qed.
@@ -448,7 +583,7 @@ Section seq.
       perm_eq s1 s2 -> perm_eq s1' s2' -> perm_eq (s1 ++ s1') (s2 ++ s2').
     Proof.
       move => H12 H12'.
-      apply : (@perm_eq_trans _ (s1 ++ s2')); first by rewrite perm_cat2l.
+      apply : (@perm_trans _ (s1 ++ s2')); first by rewrite perm_cat2l.
         by rewrite perm_cat2r.
     Qed.
 
@@ -527,8 +662,7 @@ Section path.
 
     Function qsort (s:seq T) {measure size s} :=
       if s is x :: s'
-      then qsort (filter (R^~ x) s') ++
-                 (x :: qsort (filter (fun y => ~~ R y x) s'))
+      then qsort [seq y <- s' | R y x] ++ x :: qsort [seq y <- s' | ~~ R y x]
       else [::].
     Proof.
       - move => _ x s _/=. apply /ltP. by rewrite ltnS size_filter count_size.
@@ -537,13 +671,17 @@ Section path.
 
     Lemma my_qsort_ind (P:seq T -> Prop) :
       P [::] ->
-      (forall x s, P (filter (R^~ x) s) ->
-                   P (filter (fun y => ~~ R y x) s) -> P (x :: s)) ->
+      (forall x s, P [seq y <- s | R y x] ->
+                   P [seq y <- s | ~~ R y x] -> P (x :: s)) ->
       forall s, P s.
     Proof.
       move => Hnil Hcons s.
-      elim : s {-2}(s) (leqnn (size s)) =>[|xs s IHs][]//= x l Hsize.
-      apply Hcons; exact : IHs (leq_trans (filter_size _ _) Hsize).
+      elim : s {-2}s (leqnn (size s)) =>[|xs s IHs][]//= yl l Hsize.
+        by apply : Hcons; exact : IHs (leq_trans (filter_size _ _) Hsize).
+(*
+      elim : (size s) {-2}s (leqnn (size s)) =>[|n IHn][]//= x t Hsize.
+        by apply : Hcons; exact : IHn (leq_trans (filter_size _ _) Hsize).
+ *)
     Qed.
 
     Lemma size_qsort s : size (qsort s) = size s.
@@ -649,15 +787,15 @@ Section path.
     Variable (T:eqType).
     Variable (R:rel T).
 
-    Lemma perm_eq_qsort s: perm_eq (qsort R s) s.
+    Lemma perm_qsort s: perm_eq (qsort R s) s.
     Proof.
       elim /(@my_qsort_ind _ R) : s =>[|x s IHs1 IHs2]//.
-      rewrite qsort_equation perm_catC /= perm_cons perm_eq_sym
-             -(perm_filterC (R^~ x)) perm_catC perm_eq_sym. exact : perm_cat.
+      rewrite qsort_equation perm_catC /= perm_cons perm_sym
+             -(perm_filterC (R^~ x)) perm_catC perm_sym. exact : perm_cat.
     Qed.
 
     Definition uniq_qsort s:
-      uniq (qsort R s) = uniq s := perm_eq_uniq (perm_eq_qsort s).
+      uniq (qsort R s) = uniq s := perm_uniq (perm_qsort s).
 
     Lemma mysorted_subseq s1 s2:
       subseq s1 s2 -> mysorted R s2 -> mysorted R s1.
@@ -679,7 +817,8 @@ Section path.
 
     Lemma myTsorted_sorted s: myTsorted R s -> sorted R s.
     Proof.
-      elim : s =>[|x s IHs]//= /andP [/allP H]. by rewrite path_min_sorted.
+      elim : s =>[|x s IHs]//= /andP [/allP H]. rewrite path_min_sorted //.
+      exact /allP.
     Qed.
 
     Lemma mysorted_sorted s: total R -> mysorted R s -> sorted R s.
@@ -725,7 +864,7 @@ Section path.
     Proof.
       move => Htrans Htotal.
       rewrite -(mysorted_count_le _ Htrans Htotal (qsort_sorted Htrans _)).
-      symmetry. apply /perm_eqP. exact : perm_eq_qsort.
+      symmetry. apply /permP. exact : perm_qsort.
     Qed.
 
     Implicit Types (x:T).
@@ -892,13 +1031,13 @@ Section fintype.
   Lemma arg_min_pred0 (T:finType) i0 P (F:T -> nat) :
     P =1 pred0 -> [arg min_(i < i0 | P i) F i] = i0.
   Proof.
-    rewrite /arg_min => HP. case : pickP =>// x /=. by rewrite HP.
+    rewrite /arg_min /extremum => HP. case : pickP =>// x /=. by rewrite HP.
   Qed.
 
   Lemma arg_max_pred0 (T:finType) i0 P (F:T -> nat) :
     P =1 pred0 -> [arg max_(i > i0 | P i) F i] = i0.
   Proof.
-    rewrite /arg_max => HP. case : pickP =>// x /=. by rewrite HP.
+    rewrite /arg_max /extremum => HP. case : pickP =>// x /=. by rewrite HP.
   Qed.
 
   Lemma cast_widen_ord n m (eq_n_m: n = m) :
@@ -1130,7 +1269,7 @@ Section index_app_lemma.
               ?index_app_lshift ?index_app_rshift.
   Qed.
 
-  Lemma coeff_index_app_proj k (coeff:(X ^ (dim + dim')) ^ k):
+  Lemma coeff_index_app_proj k (coeff:(X ^ (dim + dim') : Type) ^ k):
     [ffun j => index_app (index_projl (coeff j)) (index_projr (coeff j))] =
     coeff.
   Proof. apply /ffunP => i. by rewrite ffunE index_app_proj. Qed.
