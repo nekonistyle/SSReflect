@@ -35,19 +35,27 @@ Section ssralg.
     Lemma sgn_incomp t : incomp order 0%R t -> sgn t = 0%R.
     Proof. rewrite /incomp /sgn. by case /andP => /negbTE -> /negbTE ->. Qed.
 
-    CoInductive xor_sgn t : R -> bool -> bool -> bool -> bool -> Set :=
-    | XorSgnPos of strict order 0%R t : xor_sgn t r0 true false false false
-    | XorSgnNeg of strict order t 0%R : xor_sgn t (- r0) false true false false
-    | XorSgnEquiv of equiv order 0%R t : xor_sgn t 0 false false true false
-    | XorSgnIncomp of incomp order 0%R t : xor_sgn t 0 false false false true.
+    CoInductive xor_sgn t :
+      R -> bool -> bool -> bool -> bool -> bool -> bool -> bool -> bool
+      -> Set :=
+    | XorSgnPos of strict order 0%R t :
+        xor_sgn t r0 true false true false false false false false
+    | XorSgnNeg of strict order t 0%R :
+        xor_sgn t (- r0) false true false true false false false false
+    | XorSgnEquiv of equiv order 0%R t :
+        xor_sgn t 0 true true false false true true false false
+    | XorSgnIncomp of incomp order 0%R t :
+        xor_sgn t 0 false false false false false false true true.
 
     Lemma sgnP t :
-      xor_sgn t (sgn t) (strict order 0%R t) (strict order t 0%R)
-              (equiv order 0%R t) (incomp order 0%R t).
+      xor_sgn t (sgn t) (order 0%R t) (order t 0%R)
+              (strict order 0%R t) (strict order t 0%R)
+              (equiv order 0%R t) (equiv order t 0%R)
+              (incomp order 0%R t) (incomp order t 0%R).
     Proof.
-      case : relP => H.
-      - rewrite sgn_posl =>//. by constructor.
+      case : relP; rewrite 1?equiv_symm 1?incomp_symm => H.
       - rewrite sgn_negl =>//. by constructor.
+      - rewrite sgn_posl =>//. by constructor.
       - rewrite sgn_equiv0l =>//. by constructor.
       - rewrite sgn_incomp =>//. by constructor.
     Qed.
@@ -106,17 +114,21 @@ Section ssralg.
         - by move /sgn_N1neq0 : sgn_1neq0; rewrite Heq.
       Qed.
 
-      Inductive xor_total_sgn t : R -> bool -> bool -> bool -> Set :=
-      | TotalSgnPos of strict order 0%R t : xor_total_sgn t r0 true false false
+      Inductive xor_total_sgn t :
+        R -> bool -> bool -> bool -> bool -> bool -> bool -> Set :=
+      | TotalSgnPos of strict order 0%R t :
+          xor_total_sgn t r0 true false true false false false
       | TotalSgnNeg of strict order t 0%R :
-          xor_total_sgn t (- r0) false true false
-      | TotalSgnEquiv of equiv order 0%R t : xor_total_sgn t 0 false false true.
+          xor_total_sgn t (- r0) false true false true false false
+      | TotalSgnEquiv of equiv order 0%R t :
+          xor_total_sgn t 0 true true false false true true.
 
       Hypothesis (Htotal : total order).
 
       Lemma total_sgnP t :
-        xor_total_sgn t (sgn t)
-                (strict order 0%R t) (strict order t 0%R) (equiv order 0%R t).
+        xor_total_sgn t (sgn t) (order 0%R t) (order t 0%R)
+                      (strict order 0%R t) (strict order t 0%R)
+                      (equiv order 0%R t) (equiv order t 0%R).
       Proof.
         case : (totalP Htotal 0%R t) => H.
         - rewrite (sgn_pos _ H). by constructor.
@@ -310,12 +322,12 @@ Section ssralg.
       Lemma rel_eq_addr x y z w:
         order x y = order z w -> order (x + z)%R (y + w)%R = order x y.
       Proof.
-        case : (totalP Htotal x y) => []/andP[]Hxy Hyx Heq.
-        - move : (Hxy). rewrite {1}Heq. by move /(rel_addr Hxy) =>->.
+        case : (totalP Htotal x y) => []/andP[]Hxy Hyx /esym Heq.
+        - exact : (rel_addr Hxy Heq).
         - move /negbTE : (Hyx). case H : (order (x + z)%R (y + w)%R)=>//.
-          rewrite {1}Heq => Hzw. move : (Hzw) (Htotal z w) =>->/=.
+          move : (Heq) (Htotal z w) =>->/=.
           rewrite -monof_opp=>//. move /(rel_addr H). by rewrite !addrK =>->.
-        - move : (Hxy). rewrite {1}Heq. by move /(rel_addr Hxy) =>->.
+        - exact : (rel_addr Hxy Heq).
       Qed.
 
       Lemma rel_mulr n: {mono ((@natmul T)^~ n.+1) : x y / order x y}.
@@ -563,8 +575,8 @@ Section ssralg.
         exists e c:V, {in S, forall x, exists a, x = ((a*:e) + c)%R}.
 
       Lemma on1line_add (s:seq V) b :
-        on1line (pred_of_eq_seq s) ->
-        on1line (pred_of_eq_seq [seq (x + b)%R | x <- s]).
+        on1line (pred_of_seq s) ->
+        on1line (pred_of_seq [seq (x + b)%R | x <- s]).
       Proof.
         move => [e] [c] H. exists e, (c + b)%R => y /mapP [x] /H [a]->->.
         exists a. by rewrite addrA.
@@ -576,18 +588,17 @@ Section ssralg.
       Variable (V:lmodType R).
 
       Lemma on1line_mul (s:seq V) a :
-        on1line (pred_of_eq_seq s) ->
-        on1line (pred_of_eq_seq [seq (a *: x)%R | x <- s]).
+        on1line (pred_of_seq s) ->
+        on1line (pred_of_seq [seq (a *: x)%R | x <- s]).
       Proof.
         move =>[e] [c] H.
         exists (a *: e)%R, (a *: c)%R => y /mapP [x] /H [a']->->.
         exists a'. by rewrite scalerDr !scalerA mulrC.
       Qed.
 
-      Lemma on1line_inner_prod n m (w:(R ^ n) ^ m) (s:seq (V ^ n)) :
-        on1line (pred_of_eq_seq s) ->
-        on1line (pred_of_eq_seq
-                   [seq [ffun i => inner_prod (w i) x] | x <- s]).
+      Lemma on1line_inner_prod n m (w:(R ^ n) ^ m: Type) (s:seq (V ^ n)) :
+        on1line (pred_of_seq s) ->
+        on1line (pred_of_seq [seq [ffun i => inner_prod (w i) x] | x <- s]).
       Proof.
         move =>[e] [c] H.
         exists [ffun i => inner_prod (w i) e],
@@ -936,9 +947,9 @@ Section ssrnum.
       - pose r' := [seq @index_projr _ 1 _ x|x <- r].
         case : (IHn r') => w' Hr'.
         exists (if (constant [seq @index_projl _ 1 _ x ord0 | x <- r])
-                then (index_app [ffun : 'I_1 => 0%R] w')
+                then (index_app [ffun _ : 'I_1 => 0%R] w')
                 else (index_app
-                        [ffun : 'I_1 =>
+                        [ffun _ : 'I_1 =>
                          ((maxdist [seq inner_prod w' x | x <- r']) + 1)%R]
                         [ffun i =>
                          (mindist [seq @index_projl _ 1 _ x ord0 | x <- r]
