@@ -2,8 +2,8 @@
 
 ## Algebraic Neural Network Type
 
-- neuron1Type
-fundamental type of algebraic neural networks without activation function
+### neuron1Type
+Fundamental type of algebraic neural networks without activation function
 ```
 I : Type (* input type *)
 O : Type (* output and bias type *)
@@ -12,9 +12,41 @@ op : O -> O -> O (* assosiative operation *)
 action : C -> I -> O (* operator returns output *)
 ```
 
-- NNetType
-neuron1Type with activation function
+Perceptron is defined on `neuron1Type`
+```
+MP1parameter Idim Odim : Type
+  (*
+    parameters of perceptron
+      Idim : nat : number of input neurons
+      Odim : nat : number of output neurons
+  *)
 
+MP1 Idim Odim (p:MP1parameter Idim Odim) : I ^ Idim -> O ^ Odim.
+  (*
+    perceptron as a function
+  *)
+```
+
+### NNetType
+`neuron1Type` with activation function
+
+Multilayer Perceptron is defined on `NNetType`
+```
+MPparameter Idim l Odim : Type
+  (*
+    paramters of multilayer perceptron
+      Idim : nat : number of input neurons
+      Odim : nat : number of output neurons
+      l : seq nat : sequence of the numbers of each hidden neurons
+  *)
+
+MPfunction Idim l Odim (p:MPparameter Idim l Odim) : I ^ Idim -> O ^ Odim
+  (*
+    multilayer perceptron as a function
+  *)
+```
+
+###
 
 
 ## Notice
