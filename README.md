@@ -1,7 +1,5 @@
 # Algebraic Neural Network Library for Coq 8.11.1.
 
-## Algebraic Neural Network Type
-
 ### neuron1Type
 Fundamental type of algebraic neural networks without activation function
 ```
@@ -14,17 +12,13 @@ action : C -> I -> O (* operator returns output *)
 
 Perceptron is defined on `neuron1Type`
 ```
-MP1parameter Idim Odim : Type
+MP1parameter Idim Odim : Type (* parameters of perceptron *)
   (*
-    parameters of perceptron
-      Idim : nat : number of input neurons
-      Odim : nat : number of output neurons
+    Idim : nat : number of input neurons
+    Odim : nat : number of output neurons
   *)
 
-MP1 Idim Odim (p:MP1parameter Idim Odim) : I ^ Idim -> O ^ Odim.
-  (*
-    perceptron as a function
-  *)
+MP1 Idim Odim (p:MP1parameter Idim Odim) : I ^ Idim -> O ^ Odim (* perceptron as a function *)
 ```
 
 ### NNetType
@@ -32,18 +26,14 @@ MP1 Idim Odim (p:MP1parameter Idim Odim) : I ^ Idim -> O ^ Odim.
 
 Multilayer Perceptron is defined on `NNetType`
 ```
-MPparameter Idim l Odim : Type
+MPparameter Idim l Odim : Type (* parameters of multilayer perceptron *)
   (*
-    paramters of multilayer perceptron
-      Idim : nat : number of input neurons
-      Odim : nat : number of output neurons
-      l : seq nat : sequence of the numbers of each hidden neurons
+    Idim : nat : number of input neurons
+    Odim : nat : number of output neurons
+    l : seq nat : sequence of the numbers of each hidden neurons
   *)
 
-MPfunction Idim l Odim (p:MPparameter Idim l Odim) : I ^ Idim -> O ^ Odim
-  (*
-    multilayer perceptron as a function
-  *)
+MPfunction Idim l Odim (p:MPparameter Idim l Odim) : I ^ Idim -> O ^ Odim (* multilayer perceptron as a function *)
 ```
 
 ###
