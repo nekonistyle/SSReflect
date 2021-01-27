@@ -2,7 +2,7 @@
 
 ### neuron1Type
 Fundamental type of algebraic neural networks without activation function
-```
+```Coq
 I : Type (* input type *)
 O : Type (* output and bias type *)
 C : Type (* weight type *)
@@ -11,7 +11,7 @@ action : C -> I -> O (* operator returns output *)
 ```
 
 Perceptron is defined on `neuron1Type`
-```
+```Coq
 MP1parameter Idim Odim : Type (* parameters of perceptron *)
   (*
     Idim : nat : number of input neurons
@@ -25,7 +25,7 @@ MP1 Idim Odim (p:MP1parameter Idim Odim) : I ^ Idim -> O ^ Odim (* perceptron as
 `neuron1Type` with activation function
 
 Multilayer Perceptron is defined on `NNetType`
-```
+```Coq
 MPparameter Idim l Odim : Type (* parameters of multilayer perceptron *)
   (*
     Idim : nat : number of input neurons
