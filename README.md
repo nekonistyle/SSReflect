@@ -1,39 +1,39 @@
 # Algebraic Neural Network Library for Coq 8.11.1.
 
 ### neuron1Type
-Fundamental type of algebraic neural networks without activation function
+Fundamental type of algebraic neural networks without activation function.
 ```Coq
-I : Type (* input type *)
-O : Type (* output and bias type *)
-C : Type (* weight type *)
-op : O -> O -> O (* assosiative operation *)
-action : C -> I -> O (* operator returns output *)
+I : Type. (* input type *)
+O : Type. (* output and bias type *)
+C : Type. (* weight type *)
+op : O -> O -> O. (* assosiative operation *)
+action : C -> I -> O. (* operator returns output *)
 ```
 
 Perceptron is defined on `neuron1Type`
 ```Coq
-MP1parameter Idim Odim : Type (* parameters of perceptron *)
-  (*
-    Idim : nat : number of input neurons
-    Odim : nat : number of output neurons
-  *)
+(* parameters of perceptron *)
+MP1parameter Idim Odim : Type.
+  (* Idim : nat : number of input neurons *)
+  (* Odim : nat : number of output neurons *)
 
-MP1 Idim Odim (p:MP1parameter Idim Odim) : I ^ Idim -> O ^ Odim (* perceptron as a function *)
+(* perceptron as a function *)
+MP1 Idim Odim (p:MP1parameter Idim Odim) : I ^ Idim -> O ^ Odim.
 ```
 
 ### NNetType
-`neuron1Type` with activation function
+`neuron1Type` with activation function.
 
-Multilayer Perceptron is defined on `NNetType`
+Multilayer Perceptron is defined on `NNetType`.
 ```Coq
-MPparameter Idim l Odim : Type (* parameters of multilayer perceptron *)
-  (*
-    Idim : nat : number of input neurons
-    Odim : nat : number of output neurons
-    l : seq nat : sequence of the numbers of each hidden neurons
-  *)
+(* parameters of multilayer perceptron *)
+MPparameter Idim l Odim : Type.
+  (* Idim : nat : number of input neurons *)
+  (* Odim : nat : number of output neurons *)
+  (* l : seq nat : sequence of the numbers of each hidden neurons *)
 
-MPfunction Idim l Odim (p:MPparameter Idim l Odim) : I ^ Idim -> O ^ Odim (* multilayer perceptron as a function *)
+(* multilayer perceptron as a function *)
+MPfunction Idim l Odim (p:MPparameter Idim l Odim) : I ^ Idim -> O ^ Odim. 
 ```
 
 ###
