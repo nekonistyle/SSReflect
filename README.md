@@ -2,17 +2,17 @@
 
 ## Algebraic Neural Network Type
 
-### neuron1Type
+- neuron1Type
 fundamental type of algebraic neural networks without activation function
-
+```
 I : Type (* input type *)
 O : Type (* output and bias type *)
 C : Type (* weight type *)
 op : O -> O -> O (* assosiative operation *)
 action : C -> I -> O (* operator returns output *)
+```
 
-
-### NNetType
+- NNetType
 neuron1Type with activation function
 
 
