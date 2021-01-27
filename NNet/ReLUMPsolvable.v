@@ -15,7 +15,7 @@ Export GRing Num.Theory NNetDef NNet_algDef NNet_numDef ReLUNNetDef.
 Section ReLUMPsolvable_exNum_lower_bound.
   Variable (F:numFieldType).
 
-  Let MPsolvable Idim l Odim s := @MPsolvable F Idim l Odim (pred_of_eq_seq s).
+  Let MPsolvable Idim l Odim s := @MPsolvable F Idim l Odim (pred_of_seq s).
   Let expressive_number := @expressive_number F.
 
 (*
@@ -153,9 +153,9 @@ Section ReLUMPsolvable_exNum_lower_bound.
     case : (@ReLUMPsolvable_sorted_finite_set
               _ _ s' f w _ (qsort_sorted (arg_trans _) _))
     =>[x y|y x z Hyx Hzy|bias1 [p2][_ Hf]].
-    - rewrite !(perm_eq_mem Heq). exact : Hw.
+    - rewrite !(perm_mem Heq). exact : Hw.
     - exact : (ler_trans Hzy Hyx).
-    - rewrite -(perm_eq_size Heq). apply : (MPsolvable_eql (perm_eq_mem Heq)).
+    - rewrite -(perm_size Heq). apply : (MPsolvable_eql (perm_mem Heq)).
         by exists ([ffun => w], bias1, p2).
   Qed.
 
@@ -367,14 +367,14 @@ Section ReLUMPsolvable_exNum_lower_bound.
       {in s, f =1 MPfunction p}.
   Proof.
     elim : s =>[_|x [_ _/=|y s IHs /andP [/allP Hx Hsorted]]].
-    - exists (empty_index _), (MP1parameter0  _ _ _). split =>//= i.
+    - exists (empty_index _), (MP1parameter0 F _ _). split =>//= i.
         by move : (ltn_ord i).
-    - exists (empty_index _), ((coeff0 _ _ _),f x).
+    - exists (empty_index _), ((coeff0 F _ _),f x).
       split =>[i|input]; first by move : (ltn_ord i).
-        by rewrite MP1_coeff0 mem_seq1 =>/eqP ->.
+        by rewrite (@MP1_coeff0 F) mem_seq1 =>/eqP ->.
     - move : (IHs Hsorted) =>/=[bias1][p2][Hbias Hp2].
-      pose mkbias1 (g:F ^ 1) : F ^ (size s).+1 := index_app g bias1.
-      pose mkp2 (g:(F ^ 1) ^ Odim) : MP1parameter F (size s).+1 Odim
+      pose mkbias1 (g:F ^ 1:Type) : F ^ (size s).+1 := index_app g bias1.
+      pose mkp2 (g:(F ^ 1) ^ Odim:Type) : MP1parameter F (size s).+1 Odim
         := ([ffun i => index_app (g i) (p2.1 i)], p2.2).
       pose s' := filter ((@leInput _)^~ x) (y :: s).
       pose z := head [ffun => x ord0 - 1]%R s'.
@@ -386,12 +386,12 @@ Section ReLUMPsolvable_exNum_lower_bound.
       pose p : @MPparameter F 1 [:: size s] Odim
         := ([ffun => [ffun => 1%R]], bias1, p2).
       exists (mkbias1 (- z)%R),
-      (mkp2 (if x == z then coeff0 _ _ _
+      (mkp2 (if x == z then coeff0 F _ _
              else [ffun i => [ffun => ((f x i - MPfunction p x i)
                                          / (x ord0 - z ord0))%R]])).
       have ->: [ffun =>[ffun => 1%R]]
       = index_app [ffun =>[ffun => 1%R]] [ffun =>[ffun => 1%R]]
-                  :> (F ^ 1) ^ (1 + size s)
+                  :> (F ^ 1) ^ (1 + size s):Type
         by (apply /ffunP => i; rewrite !ffunE /=;
             case : splitP => j/=; rewrite ffunE).
       rewrite /mkp2 /mkbias1. split =>[i|input].
@@ -399,7 +399,7 @@ Section ReLUMPsolvable_exNum_lower_bound.
         case : (@split 1 _ i) => j /=;
           rewrite ?(@index_app_lshift _ 1) ?(@index_app_rshift _ 1) =>//.
           by rewrite eq_ord0 /= ffunE.
-      + rewrite (@MP1_sumO _ _ 1) (@actf_app _ 1) (@MP1_appr _ 1).
+      + rewrite (@MP1_sumO _ _ 1) (@actf_app _ 1) (@MP1_appr F 1).
         rewrite index_projl_app index_projr_app in_cons
                 =>/orP [/eqP ->|Hinput]; last rewrite (Hp2 _ Hinput);
           apply /ffunP => i; rewrite !ffunE /neuron1 big_ord_recl big_ord0;
@@ -435,12 +435,12 @@ Section ReLUMPsolvable_exNum_lower_bound.
   Proof.
     apply : expressive_number_Idim1 =>[][|x0 s] f //[]<-.
     pose s' := qsort (fun x y => leInput y x) (x0 :: s).
-    have Heq : perm_eq s' (x0 :: s) := perm_eq_qsort _ _.
+    have Heq : perm_eq s' (x0 :: s) := perm_qsort _ _.
     case : (@ReLUMPsolvable_sorted_finite_set _ s' f (qsort_sorted _ _))
     =>[y x z Hyx Hzy|bias [p2][_ H]]; first exact : (ler_trans Hzy Hyx).
-    have : size s = (size s').-1 by rewrite /s' (perm_eq_size Heq).
+    have : size s = (size s').-1 by rewrite /s' (perm_size Heq).
     move =>->. exists ([ffun =>[ffun => 1%R]], bias, p2) => input.
-    rewrite -(perm_eq_mem Heq). exact : H.
+    rewrite -(perm_mem Heq). exact : H.
   Qed.
 
 End ReLUMPsolvable_exNum_lower_bound.
@@ -449,7 +449,7 @@ End ReLUMPsolvable_exNum_lower_bound.
 Section ReLUMPsolvable_exNum_upper_bound.
   Variable (F:realDomainType).
 
-  Let MPsolvable Idim l Odim s := @MPsolvable F Idim l Odim (pred_of_eq_seq s).
+  Let MPsolvable Idim l Odim s := @MPsolvable F Idim l Odim (pred_of_seq s).
   Let expressive_number := @expressive_number F.
   Let maximum_expressive_number := @maximum_expressive_number F.
   Let sign b := GRing.sign F b.
@@ -586,7 +586,7 @@ Section ReLUMPsolvable_exNum_upper_bound.
       move /ReLUexpressive_number_Hdim2_zigzag_sorted.
       rewrite size_map size_iota. apply.
       + apply : mkzigzag_zigzag_def.
-        rewrite -(@perm_eq_uniq _ _ s (perm_eq_refl _)) /s.
+        rewrite -(@perm_uniq _ _ s (perm_refl _)) /s.
         apply : mkseq_uniq => m l /ffunP H. move : (H ord0).
         rewrite !ffunE. exact : (mulrIn (@oner_neq0 _)).
       + rewrite sorted_myTsorted =>[|y x z Hxy Hyz];
@@ -603,7 +603,7 @@ End ReLUMPsolvable_exNum_upper_bound.
 Section ReLUmaximum_expressive_number.
   Variable (F:realFieldType).
 
-  Let MPsolvable Idim l Odim s := @MPsolvable F Idim l Odim (pred_of_eq_seq s).
+  Let MPsolvable Idim l Odim s := @MPsolvable F Idim l Odim (pred_of_seq s).
   Let expressive_number := @expressive_number F.
   Let maximum_expressive_number := @maximum_expressive_number F.
 
