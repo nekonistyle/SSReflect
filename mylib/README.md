@@ -55,3 +55,11 @@ Hypothesis (Htrans:traisitive R).
 
 Lemma qsort_sorted s : mysorted (qsort s).
 ```
+If `T:eqType`, `sorted` and `mysorted` is equivarence.
+```Coq
+Variable (T:eqType).
+Variable (R:rel T).
+
+Lemma mysorted_sorted s : total R -> mysorted R s -> sorted R s.
+Lemma sorted_mysorted s : transitive R -> sorted R s -> mysorted R s.
+```
