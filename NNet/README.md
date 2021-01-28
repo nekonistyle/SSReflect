@@ -1,5 +1,11 @@
 # Algebraic Neural Network Library for Coq 8.11.1.
 
+This is the library for algebraic neural networks.
+
+## Algebraic Neural Network Types
+
+The coercions between each types are described in Coercions.pdf
+
 ### neuron1Type
 Fundamental type of algebraic neural networks without activation function.
 ```Coq
@@ -10,7 +16,7 @@ op : O -> O -> O. (* assosiative operation *)
 action : C -> I -> O. (* operator returns output *)
 ```
 
-Perceptron is defined on `neuron1Type`
+- Perceptron is defined on `neuron1Type`
 ```Coq
 (* parameters of perceptron *)
 MP1parameter Idim Odim : Type.
@@ -25,7 +31,7 @@ MP1 Idim Odim (p:MP1parameter Idim Odim) : I ^ Idim -> O ^ Odim.
 ### NNetType
 `neuron1Type` with activation function.
 
-Multilayer Perceptron is defined on `NNetType`.
+- Multilayer Perceptron is defined on `NNetType`.
 ```Coq
 (* parameters of multilayer perceptron *)
 MPparameter Idim l Odim : Type.
