@@ -7,6 +7,7 @@ The coercions between each types are described in Coercions.pdf
 
 ### neuron1Type
 Fundamental type of algebraic neural networks without activation function.
+
 Each `nearon1Type` packs the following types and operations.
 ```Coq
 I : Type. (* input type *)
