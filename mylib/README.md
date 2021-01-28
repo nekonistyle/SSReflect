@@ -26,7 +26,7 @@ Lemma totalP x y :
 ```
 
 We can divide a goals by all relations between `x y:T` by using `/(relP R x y)`.
-If `R` is total, we can use `totalP` instead of `relP`.
+When `total R` holds, we can use `totalP` instead of `relP`.
 
 Other definition for binary relations.
 ```Coq
@@ -56,7 +56,7 @@ Hypothesis (Htrans:traisitive R).
 Lemma qsort_sorted s : mysorted (qsort s).
 ```
 
-When `T:eqType`, `sorted` and `mysorted` is equivarence.
+When `T:eqType`, `sorted` and `mysorted` are equivarence.
 ```Coq
 Variable (T:eqType).
 Variable (R:rel T).
