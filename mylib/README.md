@@ -49,7 +49,7 @@ Variable (T:Type).
 Variable (R:rel T).
 
 Fixpoint qsort (s:seq T) : seq T.
-FIxpoint mysorted (s:seq T): bool. (* sorted in partially order R *)
+Fixpoint mysorted (s:seq T): bool. (* sorted in partially order R *)
 
 Hypothesis (Htrans:traisitive R).
 
