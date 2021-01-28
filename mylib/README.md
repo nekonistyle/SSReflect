@@ -19,6 +19,7 @@ Lemma relP x y :
               (incomp x y) (incomp y x).
 
 Hypothesis (Htotal:total R).
+
 Lemma totalP x y :
   compare_total x y (R x y) (R y x) (strict x y) (strict y x)
                 (equiv x y) (equiv y x).
@@ -39,3 +40,9 @@ Variable (Q:rel S).
 Definition lexicographic : rel (T * S) :=
   fun x y => strict x.1 y.1 || equiv x.1 y.1 && Q x.2 y.2.
 ```
+
+### quick sort
+For partially orders, we cannot use `sort` in standard library because "merge-sorted sequence" is not sorted generally.
+Thus, we need to use `qsort` for partially order.
+
+
