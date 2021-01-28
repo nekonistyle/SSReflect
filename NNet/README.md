@@ -76,13 +76,13 @@ operation `op` in `mononeuron1Type`/`monoNNetType` is commutative.
 satisfy both of `como` and `idC`.
 
 ### zmodneuron1Type/zmodNNetType
-`O` is zmodType.
+`O:zmodType`.
 
 ### zmodCNNetType
-`O` and `C` are zmodType satisfying `forall a b x, action (a + b) x = action a x + action b x`.
+`O C:zmodType` and satisfy `forall a b x, action (a + b) x = action a x + action b x`.
 
 ### zmodINNetType
-`O` and `I` are zmodType satisfying `forall a x y, action a (x + y) = action a x + action a y`.
+`O I:zmodType` and satisfy `forall a x y, action a (x + y) = action a x + action a y`.
 
 ### zmod3NNetType
 satisfy both of `zmodC` and `zmodI`.
