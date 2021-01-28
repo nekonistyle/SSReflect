@@ -43,6 +43,15 @@ Definition lexicographic : rel (T * S) :=
 
 ### quick sort
 For partially orders, we cannot use `sort` in standard library because "merge-sorted sequence" is not sorted generally.
-Thus, we need to use `qsort` for partially order.
+Thus, we need to define and use `qsort`.
+```Coq
+Variable (T:Type).
+Variable (R:rel T).
 
+Fixpoint qsort (s:seq T) : seq T.
+FIxpoint mysorted (s:seq T): bool. (* sorted in partially order R *)
 
+Hypothesis (Htrans:traisitive R).
+
+Lemma qsort_sorted s : mysorted (qsort s).
+```
