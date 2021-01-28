@@ -25,8 +25,8 @@ Lemma totalP x y :
                 (equiv x y) (equiv y x).
 ```
 
-We can divide a goals by all relations between x y:T by using "/(relP R x y)".
-If `R` is total, we can use "totalP" instead of "relP".
+We can divide a goals by all relations between `x y:T` by using `/(relP R x y)`.
+If `R` is total, we can use `totalP` instead of `relP`.
 
 Other definition for binary relations.
 ```Coq
