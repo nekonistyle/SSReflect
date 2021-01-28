@@ -102,6 +102,12 @@ satisfy both of `zmodC` and `zmodI`.
 ### comringNNetType
 `comringType` version of `ringNNetType`.
 
+### unitRingNNetType
+`unitRingType` version of `ringNNetType`.
+
+### comUnitRingNNetType
+`comUnitRingType` version of `ringNNetType`.
+
 ### idomainNNetType
 `idomainType` version of `ringNNetType`.
 
