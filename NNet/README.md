@@ -3,7 +3,7 @@
 
 ## Algebraic Neural Network Types
 
-The coercions between each types are described in Coercions.pdf
+The coercions between each types are described in *Coercions.pdf*.
 
 ### neuron1Type
 Fundamental type of algebraic neural networks without activation function.
@@ -121,7 +121,7 @@ satisfy both of `zmodC` and `zmodI`.
 `realFieldType` version of `ringNNetType`.
 
 ## Notice
-In "ReLUMPsolvable.v", we generalize an upper and lower bounds of expressive number of single hidden layer ReLU neural networks shown in ["Expressive Power of Neural Networks by the Number of Data that can be Expressed"](https://search.ieice.org/bin/index.php?category=D&lang=E&vol=J102-D&num=6&abst=j).
+In *ReLUMPsolvable.v*, we generalize an upper and lower bounds of expressive number of single hidden layer ReLU neural networks shown in ["Expressive Power of Neural Networks by the Number of Data that can be Expressed"](https://search.ieice.org/bin/index.php?category=D&lang=E&vol=J102-D&num=6&abst=j).
 This paper is written in Japanese, but the definition of expressive number and these theoriese in English are written in ["Expressive Number of Two or More Hidden Layer ReLU Neural Networks"](https://ieeexplore.ieee.org/document/8951658)
 or
 [another version](https://www.jstage.jst.go.jp/article/ijnc/10/2/10_293/_article/-char/en/).
