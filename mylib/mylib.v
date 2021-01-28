@@ -173,21 +173,22 @@ Section ssrbool.
     Proof. case /andP => HRxy HRyx. by rewrite /strict negb_and HRyx orbT. Qed.
 
     CoInductive compare_rel x y :
-      bool -> bool -> bool -> bool -> bool -> bool -> bool -> bool -> Set :=
+      bool -> bool -> bool -> bool -> bool -> bool -> bool -> bool -> bool -> bool -> Set :=
     | CompareRelLt of strict x y :
-        compare_rel x y true false true false false false false false
+        compare_rel x y true false true true true false false false false false
     | CompareRelGt of strict y x :
-        compare_rel x y false true false true false false false false
+        compare_rel x y false true true true false true false false false false
     | CompareRelEq of equiv x y :
-        compare_rel x y true true false false true true false false
+        compare_rel x y true true true true false false true true false false
     | CompareRelIC of incomp x y :
-        compare_rel x y false false false false false false true true.
+        compare_rel x y false false false false false false false false true true.
 
     Lemma relP x y :
-      compare_rel x y (R x y) (R y x) (strict x y) (strict y x)
-                  (equiv x y) (equiv y x) (incomp x y) (incomp y x).
+      compare_rel x y (R x y) (R y x) (comparable x y) (comparable y x)
+                  (strict x y) (strict y x) (equiv x y) (equiv y x)
+                  (incomp x y) (incomp y x).
     Proof.
-      rewrite /strict /equiv /incomp.
+      rewrite /comparable /strict /equiv /incomp.
       case Hxy : (R x y); case Hyx : (R y x) =>/=.
       - constructor. by rewrite /equiv Hxy Hyx.
       - constructor. by rewrite /strict Hxy Hyx.
