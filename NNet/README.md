@@ -1,5 +1,5 @@
-# Algebraic Neural Network Library for Coq 8.11.1.
-
+# Algebraic Neural Network Library.
+Coq 8.11.1 / SSReflect 1.10.0
 
 ## Algebraic Neural Network Types
 
