@@ -1,6 +1,6 @@
 # Kenta Inoue's Coq Library
 
-Library dependencies are described as *Dependenceis.pdf*.
+Library dependencies are described as *Dependencies.pdf*.
 
 ## mylib
 Fundamental lemma library.
