@@ -1,0 +1,1 @@
+# Monad class in Coq
