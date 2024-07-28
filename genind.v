@@ -34,26 +34,40 @@ Section Ind_Ind.
   Definition sunday : day := nthcon _ 6.
 
 
-  Lemma nthcon_ex (n:nat) (x:iter n.+1 (sum unit) empty) :
+  Lemma nthcon_rec_case (n:nat) (x:iter n.+1 (sum unit) empty) :
     exists m, m <= n /\ x = nthcon_rec n m.
   Proof.
     elim : n x =>[|n IHn][[]|x]//; try by exists 0.
     case : (IHn x) => m [Hm ->]. exists m.+1. by rewrite ltnS Hm.
   Qed.
 
-  Variant nthcon_or (n:nat) : iter n.+1 (sum unit) empty -> Set :=
-  | NthconOr m of m <= n : nthcon_or (nthcon_rec n m).
+  Variant nthcon_rec_or (n:nat) : iter n.+1 (sum unit) empty -> Set :=
+  | NthconRecOr m of m <= n : nthcon_rec_or (nthcon_rec n m).
 
-  Lemma nthconP (n:nat) (x:iter n.+1 (sum unit) empty) : nthcon_or x.
+  Lemma nthcon_recP (n:nat) (x:iter n.+1 (sum unit) empty) : nthcon_rec_or x.
   Proof.
-    elim : n x =>[|n IHn][[]|x]//; try exact /(NthconOr (leq0n _)).
-    case : (IHn x) => m. exact /(@NthconOr n.+1 m.+1).
+    elim : n x =>[|n IHn][[]|x]//; try exact /(NthconRecOr (leq0n _)).
+    case : (IHn x) => m. exact /(@NthconRecOr n.+1 m.+1).
+  Qed.
+
+  Lemma nthcon_case (n:nat) (x:nconstructor n.+1) :
+    exists m, m <= n /\ x = nthcon n m.
+  Proof.
+    case : x =>[x]. case : (nthcon_rec_case x) => m [Hm ->]. by exists m.
+  Qed.
+
+  Variant nthcon_or n : nconstructor n.+1 -> Set :=
+  | NthconOr m of m <= n : nthcon_or (nthcon n m).
+
+  Lemma nthconP (n:nat) (x:nconstructor n.+1) : nthcon_or x.
+  Proof.
+    case : x => x. case : (nthcon_recP x). exact /NthconOr.
   Qed.
 
   Lemma my_nconstructor_ind (n:nat) (P:nconstructor n.+1 -> Prop):
     (forall m, m <= n -> P (nthcon _ m)) -> forall x, P x.
   Proof.
-    move => H [x]. by case : (nthconP x) => m /H.
+    move => H x. by case : (nthconP x) => m /H.
   Qed.
 
   (**)
@@ -181,6 +195,7 @@ Section Ind_Ind.
     eachcon (fun tn => tn.1 * vector (basicInductive s) tn.2:Type) s n ->
     basicInductive s := @BasicInductive _ \o @mkcon_rec _ _ _ _.
 
+
   Fixpoint mkIndProp (T:Type) (f:T -> Type)
            (P:forall x,f x -> Prop) (s:seq T) (t:mkInd f s) : Prop :=
     match t with
@@ -191,7 +206,7 @@ Section Ind_Ind.
                           end
     end.
 
-  Lemma my_basicInductive_ind
+  Lemma my_basicInductive_ind'
         (s:seq (Type * nat)) (P:basicInductive s -> Prop):
     let f : Type * nat -> Type :=
         fun tn => tn.1 * vector (basicInductive s) tn.2:Type in
@@ -206,6 +221,30 @@ Section Ind_Ind.
     apply : mymkInd_ind s =>[x s t|]//=. by elim : t.2.
   Qed.
 
+  Fixpoint eachconProp (T:Type) (f:T -> Type) (P:forall x,f x -> Prop)
+           (s:seq T) (n:nat) : eachcon f s n -> Prop :=
+    match s,n return eachcon f s n -> Prop with
+    | [::],_ => fun => True
+    | t :: s',0 => @P _
+    | t :: s',n'.+1 => @eachconProp _ _ P s' n'
+    end.
+
+  Lemma my_basicInductive_ind
+        (s:seq (Type * nat)) (P:basicInductive s -> Prop):
+    let f : Type * nat -> Type :=
+        fun tn => tn.1 * vector (basicInductive s) tn.2:Type in
+    (forall n,
+      n < size s ->
+      forall x:eachcon f s n,
+        eachconProp (fun _ x => vfoldr (and \o P) True x.2) x ->
+        P (basicInductiveCon x)) ->
+    forall x, P x.
+  Proof.
+    move =>/= H x. apply /(@my_basicInductive_ind' _ P _ x) => t.
+    case : (mkcon_recP t) => n a Hn H'. apply /H =>//.
+    move : (basicInductive s) P a H' {x t H Hn} => T P.
+    elim : s n =>[|x s IH][|n]//=. apply /IH.
+  Qed.
 
   (* myseq *)
 
@@ -242,8 +281,7 @@ Section Ind_Ind.
   Lemma myseq_ind (T:Type) (P:myseq T -> Prop):
     P (mynil _) -> (forall x s, P s -> P (mycons x s)) -> forall s, P s.
   Proof.
-    move => Hnil Hcons. elim /my_basicInductive_ind => t.
-    case : (mkcon_recP t) =>[[|[|n]]][]//= a x _.
+    move => Hnil Hcons. elim /my_basicInductive_ind =>[[|[|n]]]//=_[a x]/=.
     - case : a. by rewrite (vector0nil x).
     - case : (vectorScons x) =>[h][s']->/=[Hh _]. rewrite (vector0nil s').
       exact : Hcons.
