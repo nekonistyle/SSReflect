@@ -6,7 +6,7 @@ Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
 (* ***************************** *)
-Module Gen_Ind.
+Section Ind_Ind.
   Notation empty := Empty_set.
 
   Inductive nconstructor (n:nat) : Type :=
@@ -33,36 +33,27 @@ Module Gen_Ind.
   Definition saturday : day := nthcon _ 5.
   Definition sunday : day := nthcon _ 6.
 
-(* uniqueness *)
-  Lemma nthcon_rec_uniq (n m m':nat) :
-    m <= n -> m' <= n -> nthcon_rec n m = nthcon_rec n m' -> m = m'.
-  Proof.
-    elim : n m m' =>[|n IH][|m][|m']//=. by rewrite !ltnS => Hm Hm' [/IH->].
-  Qed.
-  Lemma nthcon_uniq (n m m':nat) :
-    m <= n -> m' <= n -> nthcon n m = nthcon n m' -> m = m'.
-  Proof.
-    move => Hm Hm' []. exact /nthcon_rec_uniq.
-  Qed.
 
-(* case *)
-  Lemma nthcon_rec_case (n:nat) (x:iter n.+1 (sum unit) empty) :
+  Lemma nthcon_ex (n:nat) (x:iter n.+1 (sum unit) empty) :
     exists m, m <= n /\ x = nthcon_rec n m.
   Proof.
     elim : n x =>[|n IHn][[]|x]//; try by exists 0.
     case : (IHn x) => m [Hm ->]. exists m.+1. by rewrite ltnS Hm.
   Qed.
-  Lemma nthcon_case (n:nat) (x:nconstructor n.+1) :
-    exists m, m <= n /\ x = nthcon n m.
+
+  Variant nthcon_or (n:nat) : iter n.+1 (sum unit) empty -> Set :=
+  | NthconOr m of m <= n : nthcon_or (nthcon_rec n m).
+
+  Lemma nthconP (n:nat) (x:iter n.+1 (sum unit) empty) : nthcon_or x.
   Proof.
-    case : x =>[x]. case : (nthcon_rec_case x) => m [Hm ->]. by exists m.
+    elim : n x =>[|n IHn][[]|x]//; try exact /(NthconOr (leq0n _)).
+    case : (IHn x) => m. exact /(@NthconOr n.+1 m.+1).
   Qed.
-  
-(* induction principle *)
+
   Lemma my_nconstructor_ind (n:nat) (P:nconstructor n.+1 -> Prop):
     (forall m, m <= n -> P (nthcon _ m)) -> forall x, P x.
   Proof.
-    move => H x. by case : (nthcon_case x) =>[m [/H HP ->]].
+    move => H [x]. by case : (nthconP x) => m /H.
   Qed.
 
   (**)
@@ -115,7 +106,7 @@ Module Gen_Ind.
     | x :: s',n'.+1 => @MkIndCons _ _ _ _ \o inr \o @mkcon_rec _ f s' n'
     end.
 
-  Lemma mkInd_case (T:Type) (f:T -> Type) (s:seq T) (x:mkInd f s):
+  Lemma mkcon_ex (T:Type) (f:T -> Type) (s:seq T) (x:mkInd f s):
     exists n, n < size s /\ exists a:eachcon f s n, x = mkcon_rec a.
   Proof.
     elim /mymkInd_ind : x =>[x s' t|x s' t [n [Hn [a ->]]]].
@@ -123,31 +114,45 @@ Module Gen_Ind.
     - exists n.+1. split =>//=. by exists a.
   Qed.
 
+  Variant mkcon_rec_or (T:Type) (f:T -> Type) (s:seq T) : mkInd f s -> Prop :=
+  | MkconRecOr n (a:eachcon f s n) of n < size s : mkcon_rec_or (mkcon_rec a).
+
+  Lemma mkcon_recP (T:Type) (f:T -> Type) (s:seq T) (x:mkInd f s) :
+    mkcon_rec_or x.
+  Proof.
+    elim /mymkInd_ind : x =>[x s' t|x s' t [n a Hn]].
+    - exact /(@MkconRecOr _ _ _ 0).
+    - exact /(@MkconRecOr _ _ _ n.+1).
+  Qed.
+
   Inductive mkInductive (T:Type) (f:T -> Type) (s:seq T) : Type :=
   | MkInductive of mkInd f s.
 
   Definition mkcon (T:Type) (f:T -> Type) (s:seq T) (n:nat):
     eachcon f s n -> mkInductive f s :=
-    @MkInductive _ _ _ \o @mkcon_rec _ f s n.
+    @MkInductive _ _ _ \o @mkcon_rec _ _ _ _.
 
-  Lemma mkcon_case (T:Type) (f:T -> Type) (s:seq T) (x:mkInductive f s):
-    exists n, n < size s /\ exists a:eachcon f s n, x = mkcon a.
+  Variant mkcon_or (T:Type) (f:T -> Type) (s:seq T) : mkInductive f s -> Prop :=
+  | MkconOr n (a:eachcon f s n) of n < size s : mkcon_or (mkcon a).
+
+  Lemma mkconP (T:Type) (f:T -> Type) (s:seq T) (x:mkInductive f s) :
+    mkcon_or x.
   Proof.
-    case : x =>[x]. case : (mkInd_case x) => n [Hn [a ->]].
-    exists n. split =>//. by exists a.
+    case : x => x. case /mkcon_recP : x. exact /MkconOr.
   Qed.
 
   Lemma my_mkInductive_ind (T:Type) (f:T -> Type) (s:seq T)
         (P:mkInductive f s -> Prop):
-    (forall n, n < size s ->
-               forall a:eachcon f s n, P (mkcon a)) ->
+    (forall n, n < size s -> forall a:eachcon f s n, P (mkcon a)) ->
     forall x, P x.
   Proof.
-    move => H x. by case : (mkcon_case x) =>[n [/H H'][a ->]].
+    move => H x. by case / mkconP : x =>[n a /H].
   Qed.
 
 
   (**)
+(*  Print size0nil.*)
+(*
   Inductive sizseq (T:Type) : nat -> Type :=
   | SizNil : sizseq T 0
   | SizCons n : T -> sizseq T n -> sizseq T n.+1.
@@ -161,14 +166,107 @@ Module Gen_Ind.
 
   Definition seq_of_sizseq (T:Type) (n:nat) (s:sizseq T n) : seq T :=
     sizfold cons [::] s.
+*)
+(*
+  Inductive sizseq (T:Type) (n:nat) : predArgType :=
+  | Sizseq (s:seq T) of size s == n.
 
-(**)
+  Coercion seq_of_sizseq (T:Type) n (ss:sizseq T n) : seq T :=
+    let: Sizseq s _ := ss in s.
+  Canonical sizseq_subType (T:Type) (n:nat) := [subType for @seq_of_sizseq T n].
+
+  Lemma size_sizseq (T:Type) (n:nat) (s:sizseq T n) : size s = n.
+  Proof. case : s => s H. exact /eqP. Qed.
+  Lemma sizseq_inj (T:Type) n : injective (@seq_of_sizseq T n).
+  Proof. exact /val_inj. Qed.
+
+  Definition siznil (T:Type) : sizseq T 0 := @Sizseq _ _ [::] (eq_refl _).
+  Lemma sizseq0nil (T:Type) : all_equal_to (siznil T).
+  Proof. move => s. apply /sizseq_inj/size0nil/size_sizseq. Qed.
+
+  Definition sizcons (T:Type) (n:nat) (x:T) (ss:sizseq T n): sizseq T n.+1 :=
+    let: Sizseq s H := ss in @Sizseq _ n.+1 (x :: s) H.
+*)
+(*
+  Inductive depeq
+            (T:Type) (F:T -> Type) (t:T) (x:F t) : forall s, F s -> Prop :=
+  | Depeqrefl : depeq x x.
+
+  Lemma depeq_eq (T:Type) (F:T -> Type) (t:T) (x y:F t):
+    depeq x y -> x = y.
+  Proof.
+    case.
+
+  Lemma sizseq0nil' (T:Type) (n:nat):
+    forall x:sizseq T n, n = 0 -> depeq x (@SizNil T).
+  Proof. by case. Qed.
+
+    Lemma sizseq0nil (T:Type) (n:nat):
+    forall x: sizseq T n, n = 0 -> x = (@SizNil T).
+
+  Lemma sizseq0nil (T:Type) : all_equal_to (@SizNil T).
+
+  Fixpoint seq_of_sizseq (T:Type) (n:nat) (s:sizseq T n) : seq T :=
+    match s with
+    | SizNil => [::]
+    | SizCons _ x s' => x :: seq_of_sizseq s'
+    end.
+
+
+  Definition sizseq_sub (T:Type) (n:nat) :
+    @subType (@seq T) (fun s => size s == n).
+  Proof.
+    apply /(SubType (sizseq T n)).
+*)
+
+(*
+  Lemma sizseq_inj (T:Type) :
+    forall n m (s t:sizseq T m), m = n ->
+        seq_of_sizseq s = seq_of_sizseq t -> s = t.
+  Proof.
+    elim =>[|n IH] m. case =>//=. case. move => s. case.
+ *)
+  (*
+  Definition sizseq_size (T:Type) (n:nat) (_:sizseq T n) : nat := n.
+*)
+
+
+(*
   Inductive basicInductive (s:seq (Type * nat)) : Type :=
   | BasicInductive
       of mkInd (fun tn => tn.1 * sizseq (basicInductive s) tn.2:Type) s.
+ *)
+
+  (* vector *)
+
+  Definition vector := Vector.t.
+  Definition vnil (T:Type) : vector T 0 := Vector.nil _.
+  Definition vcons (T:Type) (n:nat) (x:T) (s:vector T n) := Vector.cons _ x _ s.
+  Definition vfoldr (A B:Type) (f:A -> B -> B) (x0:B) (n:nat) (s:vector A n) :=
+    Vector.fold_right f s x0.
+
+  Lemma vector0nil (T:Type) : all_equal_to (vnil T).
+  Proof.
+    move => x. exact : (@Vector.case0 _ (fun x => x = vnil T)).
+  Qed.
+  Lemma vectorScons (T:Type) n (s:vector T n.+1) :
+    exists x (s':vector T n), s = vcons x s'.
+  Proof.
+    apply :
+      (@Vector.caseS
+         _ (fun n (s:vector T n.+1) =>
+              exists (x:T) (s':vector T n), s = vcons x s')) => x m s'.
+      by exists x,s'.
+  Qed.
+
+  (**)
+
+  Inductive basicInductive (s:seq (Type * nat)) : Type :=
+  | BasicInductive
+      of mkInd (fun tn => tn.1 * vector (basicInductive s) tn.2:Type) s.
 
   Definition basicInductiveCon (s:seq (Type * nat)) (n:nat) :
-    eachcon (fun tn => tn.1 * sizseq (basicInductive s) tn.2:Type) s n ->
+    eachcon (fun tn => tn.1 * vector (basicInductive s) tn.2:Type) s n ->
     basicInductive s := @BasicInductive _ \o @mkcon_rec _ _ _ _.
 
   Fixpoint mkIndProp (T:Type) (f:T -> Type)
@@ -181,12 +279,12 @@ Module Gen_Ind.
                           end
     end.
 
-  Lemma my_basicInductive_ind'
+  Lemma my_basicInductive_ind
         (s:seq (Type * nat)) (P:basicInductive s -> Prop):
     let f : Type * nat -> Type :=
-        fun tn => tn.1 * sizseq (basicInductive s) tn.2:Type in
+        fun tn => tn.1 * vector (basicInductive s) tn.2:Type in
     (forall t:mkInd f s,
-        @mkIndProp _ f (fun tn (x:f tn) => sizfold (and \o P) True x.2) s t ->
+        @mkIndProp _ f (fun tn (x:f tn) => vfoldr (and \o P) True x.2) s t ->
         P (BasicInductive t)) ->
     forall x, P x.
   Proof.
@@ -196,30 +294,6 @@ Module Gen_Ind.
     apply : mymkInd_ind s =>[x s t|]//=. by elim : t.2.
   Qed.
 
-  Fixpoint eachconProp (T:Type) (f:T -> Type) (P:forall x,f x -> Prop)
-           (s:seq T) (n:nat) : eachcon f s n -> Prop :=
-    match s,n return eachcon f s n -> Prop with
-    | [::],_ => fun => True
-    | t :: s',0 => @P _
-    | t :: s',n'.+1 => @eachconProp _ _ P s' n'
-    end.
-
-  Lemma my_basicInductive_ind
-        (s:seq (Type * nat)) (P:basicInductive s -> Prop):
-    let f : Type * nat -> Type :=
-        fun tn => tn.1 * sizseq (basicInductive s) tn.2:Type in
-    (forall n,
-      n < size s ->
-      forall x:eachcon f s n,
-        eachconProp (fun _ x => sizfold (and \o P) True x.2) x ->
-        P (basicInductiveCon x)) ->
-    forall x, P x.
-  Proof.
-    move => f H. elim /(my_basicInductive_ind') => t. case : (mkInd_case t).
-    move => n [Hn [x ->]] H'. apply /H =>//. move : n x P H' {t f H Hn}.
-    move : (basicInductive s) => X. elim : s =>[|x s IH][|n]// t P. exact /IH.
-  Qed.
-
 
   (* myseq *)
 
@@ -227,53 +301,42 @@ Module Gen_Ind.
 
   Definition myseq (T:Type) := basicInductive (seqdef T).
   Definition mynil (T:Type) : myseq T :=
-    @basicInductiveCon (seqdef T) 0 (tt,SizNil _).
+    @basicInductiveCon (seqdef T) 0 (tt,vnil _).
   Definition mycons (T:Type) (x:T) (s:myseq T) : myseq T :=
-    @basicInductiveCon (seqdef T) 1 (x,SizCons s (SizNil _)).
+    @basicInductiveCon (seqdef T) 1 (x,vcons s (vnil _)).
 
+  Lemma myseq_case (T:Type) (s:myseq T) :
+    s = mynil T \/ exists x s', s = mycons x s'.
+  Proof.
+    case : s =>[m]. case : (mkcon_ex m) =>[[|[|n]]][_]//=[[a x]->].
+    - left. case : a. by rewrite (vector0nil x).
+    - right. case : (vectorScons x) =>[s' [s0 ->]]. exists a,s'.
+        by rewrite (vector0nil s0).
+  Qed.
+
+  Variant myseq_or (T:Type) : myseq T -> Prop :=
+  | MyseqOrNil : myseq_or (mynil T)
+  | MyseqOrCons x s: myseq_or (mycons x s).
+
+  Lemma myseqP (T:Type) (s:myseq T) : myseq_or s.
+  Proof.
+    case : (myseq_case s) =>[|[x][s']]->.
+    - exact /MyseqOrNil.
+    - exact /MyseqOrCons.
+  Qed.
+  
   (**)
 
-  Module Myseq.
-    Require Import JMeq.
-(*
-    Inductive JMeq (A:Type) (x:A): forall B:Type, B -> Prop :=
-      JMeq_refl : JMeq x x.      
-    Axiom : JMeq_eq A (x y:A): JMeq x y -> x = y
-*)
-    Lemma sizseq0nil' (T:Type) (n:nat):
-      forall s:sizseq T n, n = 0 -> JMeq s (SizNil T).
-    Proof. by case. Qed.
-    Lemma sizseq0nil (T:Type) : all_equal_to (SizNil T).
-    Proof. move => s /=. exact /JMeq_eq/sizseq0nil'. Qed.
+  Lemma myseq_ind (T:Type) (P:myseq T -> Prop):
+    P (mynil _) -> (forall x s, P s -> P (mycons x s)) -> forall s, P s.
+  Proof.
+    move => Hnil Hcons. elim /my_basicInductive_ind => t.
+    case : (mkcon_recP t) =>[[|[|n]]][]//= a x _.
+    - case : a. by rewrite (vector0nil x).
+    - case : (vectorScons x) =>[h][s']->/=[Hh _]. rewrite (vector0nil s').
+      exact : Hcons.
+  Qed.
 
-    Lemma sizseqScons' (T:Type) (n m:nat):
-    forall s:sizseq T m, m = n.+1 ->
-                         exists x (s':sizseq T n), JMeq s (SizCons x s').
-    Proof. case =>// n' x s [<-]. by exists x,s. Qed.
-    Lemma sizseqScons (T:Type) (n:nat):
-      forall s:sizseq T n.+1, exists x s', s = SizCons x s'.
-    Proof.
-      move => s. case : (sizseqScons' s (erefl _)) =>[x [s' H]].
-      exists x,s'. exact /JMeq_eq.
-    Qed.
+End Ind_Ind.
 
-    Lemma myseq_case (T:Type) (s:myseq T) :
-      s = mynil T \/ exists x s', s = mycons x s'.
-    Proof.
-      case : s => m. case : (mkInd_case m) =>[[|[|n]]][_]//=[[a x]->].
-      - left. case : a. by rewrite (sizseq0nil x).
-      - right. case : (sizseqScons x) =>[s' [s0 ->]]. exists a,s'.
-          by rewrite (sizseq0nil s0).
-    Qed.
-
-    Lemma myseq_ind (T:Type) (P:myseq T -> Prop):
-      P (mynil _) -> (forall x s, P s -> P (mycons x s)) -> forall s, P s.
-    Proof.
-      move => Hnil Hcons. elim /my_basicInductive_ind =>[[|[|n]]]//=_[a x]/=.
-      - case : a. by rewrite (sizseq0nil x).
-      - case : (sizseqScons x) =>[s' [s0 ->]]/=[Hs' _]. rewrite (sizseq0nil s0).
-        exact : Hcons.
-    Qed.
-  End Myseq.
-End Gen_Ind.
 
