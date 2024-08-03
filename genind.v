@@ -128,6 +128,17 @@ Section Ind_Ind.
     - exists n.+1. split =>//=. by exists a.
   Qed.
 
+  Lemma mkcon_rec_inj (T:eqType) (f:T -> Type) (s:seq T) (n:nat):
+    injective (@mkcon_rec _ f s n).
+  Proof.
+    elim : s n =>[|x s IH][|n]//= a b []/=.
+    - apply /Eqdep_dec.inj_pair2_eq_dec => i j.
+        by case : (@eqP _ i j) => Hnm; [left|right].
+    - move => H. apply /IH. apply /Eqdep_dec.inj_pair2_eq_dec : H => i j.
+        by case : (@eqP _ i j) => Hnm; [left|right].
+  Qed.
+    
+
   Variant mkcon_rec_or (T:Type) (f:T -> Type) (s:seq T) : mkInd f s -> Prop :=
   | MkconRecOr n (a:eachcon f s n) of n < size s : mkcon_rec_or (mkcon_rec a).
 
@@ -153,6 +164,12 @@ Section Ind_Ind.
     mkcon_or x.
   Proof.
     case : x => x. case /mkcon_recP : x. exact /MkconOr.
+  Qed.
+
+  Lemma mkcon_inj (T:eqType) (f:T -> Type) (s:seq T) (n:nat):
+    injective (@mkcon _ f s n).
+  Proof.
+    move => a b []. exact /mkcon_rec_inj.
   Qed.
 
   Lemma my_mkInductive_ind (T:Type) (f:T -> Type) (s:seq T)
@@ -288,5 +305,102 @@ Section Ind_Ind.
   Qed.
 
 End Ind_Ind.
+
+(**)
+
+Module Foldable.
+  Definition Fold (m:Type -> Type) :=
+    forall A B, (A -> B -> B) -> B -> m A -> B.
+
+  Record class_of (m:Type -> Type) :=
+    Class {
+        fold : Fold m
+      }.
+
+  Section ClassDef.
+    Structure map := Pack {apply; _:class_of apply}.
+    Variable (cF:map).
+    Definition class :=
+      let: Pack _ c := cF return class_of (apply cF) in c.
+  End ClassDef.
+
+  Module Exports.
+    Coercion apply : map >-> Funclass.
+    Notation foldableMap := map.
+    Notation Fold := Fold.
+    Definition fold T := fold (class T).
+  End Exports.
+End Foldable.
+Import Foldable.Exports.
+
+Section Foldable_lemma.
+  Variable (m:foldableMap).
+  Let fold := @fold m.
+End Foldable_lemma.
+
+Section Foldable_inductive.
+  Notation empty := Empty_set.
+(*
+  Inductive ifoldable : Type -> Type :=
+  | IfondableConst (A T:Type) of T : ifoldable A
+  | IfoldableId (A:Type) : ifoldable A
+  | IfoldableCons (A:Type)
+                  of seq (ifoldable A) & seq (ifoldable (ifoldable A)):
+      ifoldable A.
+*)
+
+  Inductive dvector (T:Type) (f:T -> Type -> Type) : seq T -> Type -> Type :=
+  | DvectorNil A : dvector f [::] A
+  | DvectorCons x s A of f x A * dvector f s A : dvector f (x :: s) A.
+
+  Inductive ifold : Type :=
+  | IfoldConst of Type
+  | IfoldId : ifold
+  | IfoldCons of seq (seq ifold * seq ifold).
+
+  Definition seqidef : ifold :=
+    IfoldCons [:: ([:: IfoldConst unit],[::]); ([:: IfoldId],[:: IfoldId])].
+
+  Definition treeidef : ifold :=
+    IfoldCons [:: ([:: IfoldConst unit],[::]); ([:: IfoldId],[:: seqidef])].
+
+  Inductive ifoldable : ifold -> Type -> Type :=
+  | Ifondable (i:ifold) A of
+              match i with
+              | IfoldConst T => T
+              | IfoldId => A
+              | IfoldCons s =>
+                mkInd (fun ss => dvector ifoldable ss.1 A *
+                                 dvector ifoldable ss.2 (ifoldable i A):Type) s
+              end : ifoldable i A.
+
+  Inductive ifoldable : ifold -> Type -> Type :=
+  | IfoldableConst T A : ifoldable (IfoldConst T) A
+  | IfoldableId A : ifoldable IfoldId A
+  | IfoldableCons s A of
+                  foldr
+                  (fun st => sum (foldr
+                                    (fun s => prod (ifoldable s A))
+                                    (foldr (fun s' =>
+                                              prod (ifoldable s' (ifoldable (IfoldCons s) A)))
+                                           unit st.2)
+                                    st.1)) empty s :
+      ifoldable (IfoldCons s) A.
+
+              match i with
+              | IfoldConst T => T
+              | IfoldId => A
+              | IfoldCons s =>
+                foldr
+                  (fun st => sum (foldr
+                                    (fun s => prod (ifoldable s A))
+                                    (foldr (fun s =>
+                                              prod (ifoldable s (ifoldable i A)))
+                                           unit st.2)
+                                    st.1)) empty s
+              end : ifoldable i A.
+ *)
+End Foldable_inductive.
+
 
 
